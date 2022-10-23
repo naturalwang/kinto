@@ -4,9 +4,11 @@ from shutil import copyfile
 from subprocess import PIPE, Popen
 from prekinto import *
 
+
 log = print
 
-def cmdline(command):
+
+def cmd(command):
     # subprocess.Popen takes a list of arguments:
 
     # from subprocess import Popen, PIPE
@@ -25,7 +27,7 @@ def cmdline(command):
     return stdout.strip()
 
 
-def main():
+def parsed_args():
     # 解析传入的参数
     parser = argparse.ArgumentParser()
     # 如果有 -r 或者 --remove 就表示 uninstall
@@ -37,57 +39,70 @@ def main():
     # 拿到解析后的 args
     args = parser.parse_args()
     # log('args', args)
+    return args
 
+
+def create_config_dir():
     # 拿到 home path
     homedir = os.path.expanduser("~")
     log('homedir', homedir)
-    kintotype = 0
-    
-    log('platform.system()', platform.system())
-
-    # TODO: 应该做成一个函数
-    check_x11 = cmdline("(env | grep -i x11 || loginctl show-session \"$XDG_SESSION_ID\" -p Type) | awk -F= '{print $2}'")
-    # log('len(check_x11) == 0', len(check_x11) == 0, os.name)
-    if len(check_x11) == 0:
-        if os.name != 'nt':
-            print("You are not using x11, please logout and back in using x11/Xorg")
-            # sys.exit()
-
-    # TODO: 搞懂这个 awk 是干啥的
-    distro = cmdline("awk -F= '$1==\"NAME\" { print $2 ;}' /etc/os-release").replace('"','').strip().split(" ")[0]
-    dename = cmdline("./linux/system-config/dename.sh").replace('"','').strip().split(" ")[0].lower()
-    # log('distro', distro)
-    # log('dename', dename)
-
-    run_pkg = ""
-
     # 在 home 目录下建 kinto config 文件夹
     if not os.path.isdir(homedir + "/.config/kinto"):
         os.mkdir(homedir + "/.config/kinto")
-        time.sleep(0.5)
+        # time.sleep(0.5)
 
-    cmdline("git fetch")
+
+def check_x11():
+    x11_info = cmd("(env | grep -i x11 || loginctl show-session \"$XDG_SESSION_ID\" -p Type) | awk -F= '{print $2}'")
+    # log('len(check_x11) == 0', len(check_x11) == 0, os.name)
+    if len(x11_info) == 0:
+        if os.name != 'nt':
+            print("You are not using x11, please logout and back in using x11/Xorg")
+            sys.exit()
+
+
+def run_something():
+    # TODO: 搞懂这个 awk 是干啥的
+    distro = cmd("awk -F= '$1==\"NAME\" { print $2 ;}' /etc/os-release").replace('"','').strip().split(" ")[0]
+    dename = cmd("./linux/system-config/dename.sh").replace('"','').strip().split(" ")[0].lower()
+    # log('distro', distro)
+    # log('dename', dename)
+    cmd("git fetch")
 
     # 艹, 这是要干嘛
-    kintover = cmdline('echo "$(git describe --tag --abbrev=0 | head -n 1)" "build" "$(git rev-parse --short HEAD)"')
+    kintover = cmd('echo "$(git describe --tag --abbrev=0 | head -n 1)" "build" "$(git rev-parse --short HEAD)"')
 
     print("\nKinto " + kintover + "Type in Linux like it's a Mac.\n")
 
-    # log('shlex.split("./xkeysnail_service.sh uninstall")', shlex.split("./xkeysnail_service.sh uninstall"))
 
-    if args.uninstall:
-        # check_call 
-        # Run command with arguments. Wait for command to complete. If the return code was zero then return, otherwise raise CalledProcessError.
+def uninstall():
+    # check_call 
+    # Run command with arguments. Wait for command to complete. If the return code was zero then return, otherwise raise CalledProcessError.
 
-        # shlex.split
-        # Split the string s using shell-like syntax.
-        # 和 string split 区别不大...
-        subprocess.check_call(shlex.split("./xkeysnail_service.sh uninstall"))
-        exit()
+    # shlex.split
+    # Split the string s using shell-like syntax.
+    # 和 string split 区别不大...
+    subprocess.check_call(shlex.split("./xkeysnail_service.sh uninstall"))
+    exit()
 
+
+def run():
     subprocess.check_call(shlex.split("./xkeysnail_service.sh"))
 
-    return
+
+def main():
+    args = parsed_args()
+    create_config_dir()
+
+    log('platform.system()', platform.system())
+    check_x11()
+
+    run_something()
+
+    if args.uninstall:
+        uninstall()
+
+    run()
 
 
 if __name__ == "__main__":
