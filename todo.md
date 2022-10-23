@@ -1,5 +1,12 @@
-### Setup.py
+### setup.py
 - [x] read
 - [x] comment
-- [] formatted
-- [] test on linux
+- [x] format
+- [] test on linux (build it)
+
+### linux/system-config/dename.sh
+- [] read
+- [] comment
+- [] format
+- [] test on linux (build it)
+

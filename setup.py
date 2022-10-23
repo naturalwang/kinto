@@ -2,6 +2,7 @@
 import json, time, os, sys, subprocess, shlex, platform, argparse
 from shutil import copyfile
 from subprocess import PIPE, Popen
+
 from prekinto import *
 
 
@@ -94,7 +95,7 @@ def main():
     args = parsed_args()
     create_config_dir()
 
-    log('platform.system()', platform.system())
+    # log('platform.system()', platform.system())
     check_x11()
 
     run_something()
